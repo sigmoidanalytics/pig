@@ -18,6 +18,10 @@
 
 Pig Change Log
 
+Twitter patches to 0.5
+
+PIG-968: make findContainingJar work with '+'
+
 Release 0.5.0 - Unreleased
 
 INCOMPATIBLE CHANGES
