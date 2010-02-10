@@ -20,7 +20,10 @@ Pig Change Log
 
 Twitter patches to 0.5
 
-PIG-968: make findContainingJar work with '+'
+PIG-1025:    set job priority through Pig Latin
+PIG-968:     make findContainingJar work with '+'
+             add .gitignore
+	
 
 Release 0.5.0 - Unreleased
 

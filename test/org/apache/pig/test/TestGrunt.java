@@ -709,4 +709,18 @@ public class TestGrunt extends TestCase {
         assertFalse(server.existsFile("done"));
         assertTrue(caught);
     }
+   
+    public void testSetPriority() throws Throwable {
+        PigServer server = new PigServer(ExecType.MAPREDUCE, cluster.getProperties());
+        PigContext context = server.getPigContext();
+
+        String strCmd = "set job.priority high\n";
+
+        ByteArrayInputStream cmd = new ByteArrayInputStream(strCmd.getBytes());
+        InputStreamReader reader = new InputStreamReader(cmd);
+
+        Grunt grunt = new Grunt(new BufferedReader(reader), context);
+
+        grunt.exec();
+    }
 }
