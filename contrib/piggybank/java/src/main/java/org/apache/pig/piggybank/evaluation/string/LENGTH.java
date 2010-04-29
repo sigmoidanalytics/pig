@@ -15,51 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.pig.piggybank.evaluation.string;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.pig.EvalFunc;
-import org.apache.pig.data.Tuple;
+import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataType;
+import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 
 /**
- * string.INSTR implements eval function to search for the last occurrence of a string<br>
- * Returns null on error<br>
+ * string.LENGTH implements eval function to find length of a string
  * Example:
- * <code>
- *      register pigudfs.jar;
+ *      register piggybank.jar;
  *      A = load 'mydata' as (name);
- *      B = foreach A generate string.LASTINDEXOF(name, ",");
+ *      B = foreach A generate string.LENGTH(name);
  *      dump B;
- * </code>
  */
-public class LASTINDEXOF extends EvalFunc<Integer> {
-    private static final Log log = LogFactory.getLog(LASTINDEXOF.class);
+public class LENGTH extends EvalFunc<Integer> {
 
-    /**
-     * Finds the last location of a substring in a given string.
-     * @param input tuple:<ol>
-     * <li>the string to process
-     * <li>the substring to find
-     * </ol>
-     * @exception java.io.IOException
-     * @return last location of substring, or null in case of processing errors.
-     */
+    @Override
     public Integer exec(Tuple input) throws IOException {
-        if (input == null || input.size() < 2)
+        if (input == null || input.size() == 0) {
             return null;
-
+        }
         try {
-            String str = (String)input.get(0);
-            String search = (String)input.get(1);
-            return str.lastIndexOf(search);
-        } catch(Exception e) {
-            log.warn("Failed to process input; error - " + e.getMessage());
+            String str = (String) input.get(0);
+            return (str == null) ? null : str.length();
+        } catch (ExecException e) {
+            log.warn("Error reading input: " + e.getMessage());
             return null;
         }
     }
