@@ -162,4 +162,9 @@ public class LocalJob implements ExecJob {
     public Exception getException() {
         return null;
     }
+
+    public Properties getConfiguration() {
+		    Properties props = new Properties();
+		    return props;
+		}
 }
