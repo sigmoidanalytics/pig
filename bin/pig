@@ -135,22 +135,19 @@ for f in $PIG_HOME/build/pig-*-core.jar; do
     CLASSPATH=${CLASSPATH}:$f;
 done
 
-# Set the version for Hadoop, default to 17
-PIG_HADOOP_VERSION="${PIG_HADOOP_VERSION:-20}"
-# add libs to CLASSPATH.    There can be more than one version of the hadoop
-# libraries in the lib dir, so don't blindly add them all.    Only add the one
-# that matche PIG_HADOOP_VERSION.
-for f in $PIG_HOME/lib/*.jar; do
-    IS_HADOOP=`echo $f | grep hadoop`
-    if [ "${IS_HADOOP}x" == "x" ]; then
-        CLASSPATH=${CLASSPATH}:$f;
-    else 
-        IS_RIGHT_VER=`echo $f | grep hadoop${PIG_HADOOP_VERSION}.jar`
-        if [ "${IS_RIGHT_VER}x" != "x" ]; then
-            CLASSPATH=${CLASSPATH}:$f;
-        fi
-    fi
+# Add installed version of Hadoop to classpath
+HADOOP_HOME=${HADOOP_HOME:-/usr/lib/hadoop}
+source $HADOOP_HOME/bin/hadoop-config.sh
+
+for jar in $HADOOP_HOME/hadoop*core.jar $HADOOP_HOME/lib/* ; do
+  CLASSPATH=$CLASSPATH:$jar
 done
+if [ ! -z "$HADOOP_CLASSPATH" ] ; then
+  CLASSPATH=$CLASSPATH:$HADOOP_CLASSPATH
+fi
+if [ ! -z "$HADOOP_CONF_DIR" ] ; then
+  CLASSPATH=$CLASSPATH:$HADOOP_CONF_DIR
+fi
 
 # add user-specified CLASSPATH last
 if [ "$PIG_CLASSPATH" != "" ]; then
