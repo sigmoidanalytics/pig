@@ -67,6 +67,7 @@
       conf="test->default"/>
     <dependency org="com.google.code.p.arat" name="rat-lib" rev="${rats-lib.version}"
       conf="releaseaudit->default"/>
+    <dependency org="joda-time" name="joda-time" rev="${joda-time.version}" conf="compile->master"/>
     <!--ATM hbase, hbase-test.jar, hadoop.jar are resolved from the lib dir--> 	
     </dependencies>
 </ivy-module>
