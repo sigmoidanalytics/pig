@@ -59,7 +59,7 @@ public class TestAlgebraicInstantiation {
     @Test
     public void testAlgebraicInstantiation() throws IOException {
         pig.registerQuery("a = group (load '" 
-                    + Util.generateURI(tmpFile.toString(), pig.getPigContext()) + "') by ($0);");
+                    + Util.generateURI(tmpFile.toString()) + "') by ($0);");
         pig.registerQuery("b = foreach a generate org.apache.pig.test.TestAlgebraicInstantiation$AlgInstUDF($1.$1);");
         Iterator<Tuple> tupIter = pig.openIterator("b");
         assertEquals("no-args", tupIter.next().toDelimitedString(","));
@@ -72,7 +72,7 @@ public class TestAlgebraicInstantiation {
     @Test
     public void testRegularInstantiation() throws IOException {
         pig.registerQuery("a = group (load '" 
-                    + Util.generateURI(tmpFile.toString(), pig.getPigContext()) + "') by ($0);");
+                    + Util.generateURI(tmpFile.toString()) + "') by ($0);");
         pig.registerQuery("b = foreach a generate org.apache.pig.test.TestAlgebraicInstantiation$ParamUDF($1.$1);");
         Iterator<Tuple> tupIter = pig.openIterator("b");
         assertEquals("no-args", tupIter.next().toDelimitedString(","));
