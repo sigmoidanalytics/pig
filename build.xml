@@ -49,12 +49,10 @@
     <property name="dist.dir" value="${build.dir}/${final.name}" />
     <!-- property name="build.encoding" value="ISO-8859-1" / -->
     <property name="build.encoding" value="UTF8" />
-    <!-- TODO with only one version of hadoop in the lib folder we do not need that anymore -->
+
     <property name="automaton.jarfile" value="automaton.jar" />
-    <property name="hbase.jarfile" value="hbase-0.20.6.jar" />
-    <property name="hbase.test.jarfile" value="hbase-0.20.6-test.jar" />
-	<property name="zookeeper.jarfile" value="zookeeper-hbase-1329.jar" />
-	
+    <property name="hbase.test.jarfile" value="hbase-0.90.0-tests.jar" />
+
     <!-- javac properties -->
     <property name="javac.debug" value="on" />
     <property name="javac.optimize" value="on" />
@@ -196,23 +194,23 @@
     <!-- setup the classpath -->
     <path id="classpath">
 	<path refid="compile.classpath"/>	
+        <fileset file="${ivy.lib.dir}/${hbase.jarfile}" />
         <fileset file="${lib.dir}/${automaton.jarfile}" />
-        <fileset file="${lib.dir}/${hbase.jarfile}" />
         <fileset file="${lib.dir}/${hbase.test.jarfile}" />
-    	<fileset file="${lib.dir}/${zookeeper.jarfile}"/>
+        <fileset file="${ivy.lib.dir}/${zookeeper.jarfile}"/>
     </path>
 
     <!-- javadoc-classpath -->
     <path id="javadoc-classpath">
-        <fileset file="${lib.dir}/${hbase.jarfile}" />
-	<fileset file="${lib.dir}/${guava.jarfile}" />
 	<fileset file="${lib.dir}/${automaton.jarfile}" />
+        <fileset file="${lib.dir}/${guava.jarfile}" />
         <fileset file="${lib.dir}/${hbase.test.jarfile}" />
 	<path refid="javadoc.classpath"/>	
     </path> 
 
     <path id="test.classpath">
         <pathelement location="${build.classes}"/>
+        <fileset file="${lib.dir}/${hbase.test.jarfile}" />
         <pathelement location="${test.src.dir}"/>
         <path refid="classpath"/>
         <path refid="test-classpath"/>
@@ -672,7 +670,6 @@
             <sysproperty key="ssh.gateway" value="${ssh.gateway}" />
             <sysproperty key="hod.server" value="${hod.server}" />
             <sysproperty key="java.io.tmpdir" value="${junit.tmp.dir}" />
-
             <!-- <sysproperty key="hod.command" value="${hod.command}"/>
             			<sysproperty key="hod.param" value="${hod.param}"/> -->
             <sysproperty key="hadoop.log.dir" value="${test.log.dir}"/>
