@@ -17,10 +17,28 @@
  */
 package org.apache.pig;
 
-import java.io.*;
-import java.util.*;
-import java.util.jar.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 import jline.ConsoleReader;
 import jline.ConsoleReaderInputStream;
@@ -28,40 +46,38 @@ import jline.History;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.apache.pig.ExecType;
 import org.apache.pig.impl.PigContext;
 import org.apache.pig.impl.io.FileLocalizer;
 import org.apache.pig.impl.logicalLayer.LogicalPlanBuilder;
 import org.apache.pig.impl.util.JarManager;
+import org.apache.pig.impl.util.LogUtils;
 import org.apache.pig.impl.util.ObjectSerializer;
 import org.apache.pig.impl.util.PropertiesUtil;
 import org.apache.pig.tools.cmdline.CmdLineParser;
 import org.apache.pig.tools.grunt.Grunt;
-import org.apache.pig.impl.util.LogUtils;
-import org.apache.pig.tools.timer.PerformanceTimerFactory;
 import org.apache.pig.tools.parameters.ParameterSubstitutionPreprocessor;
+import org.apache.pig.tools.timer.PerformanceTimerFactory;
 
 public class Main
 {
 
     private final static Log log = LogFactory.getLog(Main.class);
-    
+
     private static final String LOG4J_CONF = "log4jconf";
     private static final String BRIEF = "brief";
     private static final String DEBUG = "debug";
     private static final String JAR = "jar";
     private static final String VERBOSE = "verbose";
-    
+
     private enum ExecMode {STRING, FILE, SHELL, UNKNOWN};
-                
+
 /**
  * The Main-Class for the Pig Jar that will provide a shell and setup a classpath appropriate
  * for executing Jar files.
- * 
+ *
  * @param args
  *            -jar can be used to add additional jar files (colon separated). - will start a
  *            shell. -e will execute the rest of the command line as if it was input to the
@@ -73,7 +89,7 @@ public static void main(String args[])
     int rc = 1;
     Properties properties = new Properties();
     PropertiesUtil.loadPropertiesFromFile(properties);
-    
+
     boolean verbose = false;
     boolean gruntCalled = false;
     String logFileName = null;
@@ -107,6 +123,8 @@ public static void main(String args[])
         opts.registerOpt('x', "exectype", CmdLineParser.ValueExpected.REQUIRED);
         opts.registerOpt('F', "stop_on_failure", CmdLineParser.ValueExpected.NOT_ACCEPTED);
         opts.registerOpt('M', "no_multiquery", CmdLineParser.ValueExpected.NOT_ACCEPTED);
+        opts.registerOpt('P', "propertyFile", CmdLineParser.ValueExpected.REQUIRED);
+        opts.registerOpt('R', "prop", CmdLineParser.ValueExpected.REQUIRED);
 
         ExecMode mode = ExecMode.UNKNOWN;
         String file = null;
@@ -120,7 +138,7 @@ public static void main(String args[])
         if(clusterConfigured != null && clusterConfigured.length() > 0){
             cluster = clusterConfigured;
         }
-        
+
         //by default warning aggregation is on
         properties.setProperty("aggregate.warning", ""+true);
 
@@ -144,7 +162,7 @@ public static void main(String args[])
                 properties.setProperty(BRIEF, "true");
                 break;
 
-            case 'c': 
+            case 'c':
                 // Needed away to specify the cluster to run the MR job on
                 // Bug 831708 - fixed
                 String clusterParameter = opts.getValStr();
@@ -160,8 +178,8 @@ public static void main(String args[])
                 }
                 debug = true;
                 break;
-                
-            case 'e': 
+
+            case 'e':
                 mode = ExecMode.STRING;
                 break;
 
@@ -184,7 +202,7 @@ public static void main(String args[])
                 rc = 0;
             	return;
 
-            case 'j': 
+            case 'j':
                 String jarsString = opts.getValStr();
                 if(jarsString != null){
                     properties.setProperty(JAR, jarsString);
@@ -192,8 +210,8 @@ public static void main(String args[])
                 break;
 
             case 'l':
-                //call to method that validates the path to the log file 
-                //and sets up the file to store the client side log file                
+                //call to method that validates the path to the log file
+                //and sets up the file to store the client side log file
                 String logFileParameter = opts.getValStr();
                 if (logFileParameter != null && logFileParameter.length() > 0) {
                     logFileName = validateLogFile(logFileParameter, null);
@@ -212,13 +230,13 @@ public static void main(String args[])
                 // turns off multiquery optimization
                 properties.setProperty("opt.multiquery",""+false);
                 break;
-                            
-            case 'p': 
+
+            case 'p':
                 String val = opts.getValStr();
                 params.add(opts.getValStr());
                 break;
-                            
-            case 'r': 
+
+            case 'r':
                 // currently only used for parameter substitution
                 // will be extended in the future
                 dryrun = true;
@@ -227,7 +245,7 @@ public static void main(String args[])
             case 't':
             	optimizerRules.add(opts.getValStr());
                 break;
-                            
+
             case 'v':
                 properties.setProperty(VERBOSE, ""+true);
                 verbose = true;
@@ -244,6 +262,33 @@ public static void main(String args[])
                         throw new RuntimeException("ERROR: Unrecognized exectype.", e);
                     }
                 break;
+           case 'P':
+           {
+               InputStream inputStream = null;
+               try {
+                   FileLocalizer.FetchFileRet localFileRet = FileLocalizer.fetchFile(properties, opts.getValStr());
+                   inputStream = new BufferedInputStream(new FileInputStream(localFileRet.file));
+                   properties.load(inputStream) ;
+               } catch (IOException e) {
+                   throw new RuntimeException("Unable to parse properties file '" + opts.getValStr() + "'");
+               } finally {
+                   if (inputStream != null) {
+                       try {
+                           inputStream.close();
+                       } catch (IOException e) {
+                       }
+                   }
+               }
+           }
+           break;
+
+           case 'R':
+               int idx = opts.getValStr().indexOf('=');
+               if (idx == -1 || idx == 0) {
+                   throw new RuntimeException("Property '" + opts.getValStr() + "' not in valid form A=B");
+               }
+               properties.put(opts.getValStr().substring(0, idx), opts.getValStr().substring(idx + 1));
+               break;
             default: {
                 Character cc = Character.valueOf(opt);
                 throw new AssertionError("Unhandled option " + cc.toString());
@@ -255,21 +300,21 @@ public static void main(String args[])
 
         // configure logging
         configureLog4J(properties, pigContext);
-        
+
         if(logFileName == null && !userSpecifiedLog) {
 	    logFileName = validateLogFile(properties.getProperty("pig.logfile"), null);
 	}
-        
+
         if(logFileName != null) {
             log.info("Logging error messages to: " + logFileName);
         }
-        
+
         pigContext.getProperties().setProperty("pig.logfile", (logFileName == null? "": logFileName));
-        
+
         if(optimizerRules.size() > 0) {
         	pigContext.getProperties().setProperty("pig.optimizer.rules", ObjectSerializer.serialize(optimizerRules));
         }
-        
+
         if (properties.get("udf.import.list")!=null)
             PigContext.initializeImportList((String)properties.get("udf.import.list"));
 
@@ -281,12 +326,14 @@ public static void main(String args[])
         String substFile = null;
         switch (mode) {
         case FILE: {
-            // Run, using the provided file as a pig file
-            in = new BufferedReader(new FileReader(file));
-
+           FileLocalizer.FetchFileRet localFileRet = FileLocalizer.fetchFile(properties, file);
+           if (localFileRet.didFetch) {
+               properties.setProperty("pig.jars.relative.to.dfs", "true");
+           }
+           in = new BufferedReader(new FileReader(localFileRet.file));
             // run parameter substitution preprocessor first
             substFile = file + ".substituted";
-            pin = runParamPreprocessor(in, params, paramFiles, substFile, debug || dryrun);
+            pin = runParamPreprocessor(properties, in, params, paramFiles, substFile, debug || dryrun );
             if (dryrun) {
                 log.info("Dry run completed. Substituted pig script is at " + substFile);
                 return;
@@ -296,14 +343,14 @@ public static void main(String args[])
             pigContext.getProperties().setProperty("pig.logfile", logFileName);
 
             // Set job name based on name of the script
-            pigContext.getProperties().setProperty(PigContext.JOB_NAME, 
+            pigContext.getProperties().setProperty(PigContext.JOB_NAME,
                                                    "PigLatin:" +new File(file).getName()
             );
-            
+
             if (!debug) {
                 new File(substFile).deleteOnExit();
             }
-            
+
             grunt = new Grunt(pin, pigContext);
             gruntCalled = true;
             int results[] = grunt.exec();
@@ -359,16 +406,19 @@ public static void main(String args[])
                     + "at a time from the command line.");
             }
             mode = ExecMode.FILE;
-            in = new BufferedReader(new FileReader(remainders[0]));
-
+            FileLocalizer.FetchFileRet localFileRet = FileLocalizer.fetchFile(properties, remainders[0]);
+            if (localFileRet.didFetch) {
+                properties.setProperty("pig.jars.relative.to.dfs", "true");
+            }
+            in = new BufferedReader(new FileReader(localFileRet.file));
             // run parameter substitution preprocessor first
             substFile = remainders[0] + ".substituted";
-            pin = runParamPreprocessor(in, params, paramFiles, substFile, debug || dryrun);
+            pin = runParamPreprocessor(properties, in, params, paramFiles, substFile, debug || dryrun);
             if (dryrun){
                 log.info("Dry run completed. Substituted pig script is at " + substFile);
                 return;
             }
-            
+
             logFileName = validateLogFile(logFileName, remainders[0]);
             pigContext.getProperties().setProperty("pig.logfile", logFileName);
 
@@ -377,7 +427,7 @@ public static void main(String args[])
             }
 
             // Set job name based on name of the script
-            pigContext.getProperties().setProperty(PigContext.JOB_NAME, 
+            pigContext.getProperties().setProperty(PigContext.JOB_NAME,
                                                    "PigLatin:" +new File(remainders[0]).getName()
             );
 
@@ -397,7 +447,7 @@ public static void main(String args[])
         rc = 2;
     } catch (PigException pe) {
         if(pe.retriable()) {
-            rc = 1; 
+            rc = 1;
         } else {
             rc = 2;
         }
@@ -440,7 +490,7 @@ private static void configureLog4J(Properties properties, PigContext pigContext)
     // TODO Add a file appender for the logs
     // TODO Need to create a property in the properties file for it.
     // sgroschupf, 25Feb2008: this method will be obsolete with PIG-115.
-     
+
     String log4jconf = properties.getProperty(LOG4J_CONF);
     String trueString = "true";
     boolean brief = trueString.equalsIgnoreCase(properties.getProperty(BRIEF));
@@ -450,7 +500,7 @@ private static void configureLog4J(Properties properties, PigContext pigContext)
     if (logLevelString != null){
         logLevel = Level.toLevel(logLevelString, Level.INFO);
     }
-    
+
     Properties props = new Properties();
     FileReader propertyReader = null;
     if (log4jconf != null) {
@@ -495,46 +545,53 @@ private static void configureLog4J(Properties properties, PigContext pigContext)
     pigContext.setLog4jProperties(backendProps);
     pigContext.setDefaultLogLevel(logLevel);
 }
- 
+
 // returns the stream of final pig script to be passed to Grunt
-private static BufferedReader runParamPreprocessor(BufferedReader origPigScript, ArrayList<String> params,
-                                            ArrayList<String> paramFiles, String scriptFile, boolean createFile) 
+private static BufferedReader runParamPreprocessor(Properties properties, BufferedReader origPigScript, ArrayList<String> params,
+                                            ArrayList<String> paramFiles, String scriptFile, boolean createFile)
                                 throws org.apache.pig.tools.parameters.ParseException, IOException{
+
+    ArrayList<String> paramFiles2 = new ArrayList<String>();
+    for (String param: paramFiles) {
+        FileLocalizer.FetchFileRet localFileRet = FileLocalizer.fetchFile(properties, param);
+        paramFiles2.add(localFileRet.file.getAbsolutePath());
+    }
+
     ParameterSubstitutionPreprocessor psp = new ParameterSubstitutionPreprocessor(50);
     String[] type1 = new String[1];
     String[] type2 = new String[1];
 
     if (createFile){
         BufferedWriter fw = new BufferedWriter(new FileWriter(scriptFile));
-        psp.genSubstitutedFile (origPigScript, fw, params.size() > 0 ? params.toArray(type1) : null, 
-                                paramFiles.size() > 0 ? paramFiles.toArray(type2) : null);
+        psp.genSubstitutedFile (origPigScript, fw, params.size() > 0 ? params.toArray(type1) : null,
+                                paramFiles.size() > 0 ? paramFiles2.toArray(type2) : null);
         return new BufferedReader(new FileReader (scriptFile));
 
     } else {
         StringWriter writer = new StringWriter();
-        psp.genSubstitutedFile (origPigScript, writer,  params.size() > 0 ? params.toArray(type1) : null, 
-                                paramFiles.size() > 0 ? paramFiles.toArray(type2) : null);
+        psp.genSubstitutedFile (origPigScript, writer,  params.size() > 0 ? params.toArray(type1) : null,
+                                paramFiles.size() > 0 ? paramFiles2.toArray(type2) : null);
         return new BufferedReader(new StringReader(writer.toString()));
     }
 }
-    
+
 private static String getVersionString() {
 	String findContainingJar = JarManager.findContainingJar(Main.class);
-	  try { 
-          JarFile jar = new JarFile(findContainingJar); 
-          final Manifest manifest = jar.getManifest(); 
-          final Map <String,Attributes> attrs = manifest.getEntries(); 
+	  try {
+          JarFile jar = new JarFile(findContainingJar);
+          final Manifest manifest = jar.getManifest();
+          final Map <String,Attributes> attrs = manifest.getEntries();
           Attributes attr = attrs.get("org/apache/pig");
           String version = attr.getValue("Implementation-Version");
           String svnRevision = attr.getValue("Svn-Revision");
           String buildTime = attr.getValue("Build-TimeStamp");
-          // we use a version string similar to svn 
+          // we use a version string similar to svn
           //svn, version 1.4.4 (r25188)
           // compiled Sep 23 2007, 22:32:34
           return "Apache Pig version " + version + " (r" + svnRevision + ") \ncompiled "+buildTime;
-      } catch (Exception e) { 
-          throw new RuntimeException("unable to read pigs manifest file", e); 
-      } 
+      } catch (Exception e) {
+          throw new RuntimeException("unable to read pigs manifest file", e);
+      }
 }
 
 public static void usage()
@@ -552,7 +609,7 @@ public static void usage()
         System.out.println("    -f, -file path to the script to execute");
         System.out.println("    -h, -help display this message");
         System.out.println("    -i, -version display version information");
-        System.out.println("    -j, -jar jarfile load jarfile"); 
+        System.out.println("    -j, -jar jarfile load jarfile");
         System.out.println("    -l, -logfile path to client side log file; current working directory is default");
         System.out.println("    -m, -param_file path to the parameter file");
         System.out.println("    -p, -param key value pair of the form param=val");
@@ -564,11 +621,13 @@ public static void usage()
 
         System.out.println("    -F, -stop_on_failure aborts execution on the first failed job; off by default");
         System.out.println("    -M, -no_multiquery turn multiquery optimization off; Multiquery is on by default");
+        System.out.println("    -P, -propertyFile - Path to property file");
+        System.out.println("    -R, -prop - Property key value pair of the form key=value");
 }
 
 private static String validateLogFile(String logFileName, String scriptName) {
     String strippedDownScriptName = null;
-    
+
     if(scriptName != null) {
         File scriptFile = new File(scriptName);
         if(!scriptFile.isDirectory()) {
@@ -578,20 +637,20 @@ private static String validateLogFile(String logFileName, String scriptName) {
             } catch (IOException ioe) {
                 log.warn("Could not compute canonical path to the script file " + ioe.getMessage());
                 return null;
-            }            
+            }
             strippedDownScriptName = getFileFromCanonicalPath(scriptFileAbsPath);
         }
     }
-    
+
     String defaultLogFileName = (strippedDownScriptName == null ? "pig_" : strippedDownScriptName) + new Date().getTime() + ".log";
-    File logFile;    
-    
+    File logFile;
+
     if(logFileName != null) {
         logFile = new File(logFileName);
-    
-        //Check if the file name is a directory 
+
+        //Check if the file name is a directory
         //append the default file name to the file
-        if(logFile.isDirectory()) {            
+        if(logFile.isDirectory()) {
             if(logFile.canWrite()) {
                 try {
                     logFileName = logFile.getCanonicalPath() + File.separator + defaultLogFileName;
@@ -607,7 +666,7 @@ private static String validateLogFile(String logFileName, String scriptName) {
         } else {
             //we have a relative path or an absolute path to the log file
             //check if we can write to the directory where this file is/will be stored
-            
+
             if (logFile.exists()) {
                 if(logFile.canWrite()) {
                     try {
@@ -625,7 +684,7 @@ private static String validateLogFile(String logFileName, String scriptName) {
                 }
             } else {
                 logFile = logFile.getParentFile();
-                
+
                 if(logFile != null) {
                     //if the directory is writable we are good to go
                     if(logFile.canWrite()) {
@@ -640,19 +699,19 @@ private static String validateLogFile(String logFileName, String scriptName) {
                         log.warn("Need write permission in the directory: " + logFile + " to create log file.");
                         return logFileName;
                     }
-                }//end if logFile != null else is the default in fall through                
+                }//end if logFile != null else is the default in fall through
             }//end else part of logFile.exists()
         }//end else part of logFile.isDirectory()
     }//end if logFileName != null
-    
-    //file name is null or its in the current working directory 
+
+    //file name is null or its in the current working directory
     //revert to the current working directory
     String currDir = System.getProperty("user.dir");
     logFile = new File(currDir);
     logFileName = currDir + File.separator + (logFileName == null? defaultLogFileName : logFileName);
-    if(logFile.canWrite()) {        
+    if(logFile.canWrite()) {
         return logFileName;
-    }    
+    }
     log.warn("Cannot write to log file: " + logFileName);
     return null;
 }
