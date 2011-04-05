@@ -104,10 +104,10 @@ public class TestPigServer extends TestCase {
         assertFalse((new File(name)).canRead());
         
         System.err. println("Location: " + location);
-        assertTrue((new File(location)).mkdirs());
-        
-        assertTrue((new File(location + FILE_SEPARATOR + name)).
-                    createNewFile());
+//        assertTrue((new File(location)).mkdirs());
+        (new File(location)).mkdirs();      
+        (new File(location + FILE_SEPARATOR + name)).
+                    createNewFile();
     }
     
     // dynamically add more resources to the system class loader
@@ -282,6 +282,61 @@ public class TestPigServer extends TestCase {
 
         // clean up Jar file and test dir
         (new File(dir + FILE_SEPARATOR + jarName)).delete();
+        (new File(dir)).delete();
+    }
+    
+    @Test
+    public void testRegisterJarGlobbingRelative() throws Throwable {
+        String dir = "test1_register_jar_globbing_relative";
+        String jarLocation = dir + FILE_SEPARATOR;
+        String jar1Name = "TestRegisterJarGlobbing1.jar";
+        String jar2Name = "TestRegisterJarGlobbing2.jar";
+        
+        createFakeJarFile(jarLocation, jar1Name);
+        createFakeJarFile(jarLocation, jar2Name);
+        
+        boolean exceptionRaised = false;
+        try {
+            pig.registerJar(jarLocation + "TestRegisterJarGlobbing*.jar");
+        }
+        catch (IOException e) {
+            exceptionRaised = true;
+        }        
+        assertFalse(exceptionRaised);
+        verifyStringContained(pig.getPigContext().extraJars, jar1Name, true);
+        verifyStringContained(pig.getPigContext().extraJars, jar2Name, true);
+
+        // clean-up
+        assertTrue((new File(jarLocation + jar1Name)).delete());
+        assertTrue((new File(jarLocation + jar2Name)).delete());
+        (new File(dir)).delete();
+    }
+    
+    @Test
+    public void testRegisterJarGlobbingAbsolute() throws Throwable {
+        String dir = "test1_register_jar_globbing_absolute";
+        String jarLocation = dir + FILE_SEPARATOR;
+        String jar1Name = "TestRegisterJarGlobbing1.jar";
+        String jar2Name = "TestRegisterJarGlobbing2.jar";
+        
+        createFakeJarFile(jarLocation, jar1Name);
+        createFakeJarFile(jarLocation, jar2Name);
+        
+        boolean exceptionRaised = false;
+        String currentDir = System.getProperty("user.dir");
+        try {
+            pig.registerJar(new File(currentDir, dir) + FILE_SEPARATOR + "TestRegisterJarGlobbing*.jar");
+        }
+        catch (IOException e) {
+            exceptionRaised = true;
+        }        
+        assertFalse(exceptionRaised);
+        verifyStringContained(pig.getPigContext().extraJars, jar1Name, true);
+        verifyStringContained(pig.getPigContext().extraJars, jar2Name, true);
+
+        // clean-up
+        assertTrue((new File(jarLocation + jar1Name)).delete());
+        assertTrue((new File(jarLocation + jar2Name)).delete());
         (new File(dir)).delete();
     }
 
