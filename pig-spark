@@ -18,12 +18,16 @@ export SPARK_YARN_APP_JAR=pig/pig-withouthadoop.jar
 export SPARK_JAR=spark.jar
 export SPARK_MASTER=yarn-client
 
+export SPARK_HOME=
+
 # jars to ship, pig-withouthadoop.jar to workaround Classloader issue
 export SPARK_JARS=piggybank.jar
 
 # Pig settings
 export PIG_CLASSPATH=${SPARK_JAR}:${SPARK_JARS}:mesos.jar:pig-withouthadoop.jar
 export SPARK_PIG_JAR=pig/pig-withouthadoop.jar
+export PIG_CLASSPATH=${SPARK_JAR}:${SPARK_JARS}:mesos.jar:pig-withouthadoop.jar
+export SPARK_PIG_JAR=pig-withouthadoop.jar
 
 # Cluster settings
 export SPARK_WORKER_CORES=4
