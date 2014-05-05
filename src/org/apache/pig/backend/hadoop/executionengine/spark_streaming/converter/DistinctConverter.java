@@ -35,9 +35,9 @@ public  class  DistinctConverter implements POConverter<Tuple, Tuple, PODistinct
 			PODistinct poDistinct) throws IOException {
     	
         SparkUtil.assertPredecessorSize(predecessors, poDistinct, 1);
-        JavaDStream<Tuple> rdd = predecessors.get(0);
+        JavaDStream<Tuple> inputDStream = predecessors.get(0);
 
-        return new JavaDStream<Tuple>(rdd.dstream().countByValue(5).map(TO_VALUE_FUNCTION , SparkUtil.getManifest(Tuple.class)),SparkUtil.getManifest(Tuple.class));
+        return new JavaDStream<Tuple>(inputDStream.dstream().countByValue(1).map(TO_VALUE_FUNCTION , SparkUtil.getManifest(Tuple.class)),SparkUtil.getManifest(Tuple.class));
     }
     public static final class ToValueFunction extends AbstractFunction1<Tuple2<Tuple, Object>, Tuple> implements Serializable {
         @Override

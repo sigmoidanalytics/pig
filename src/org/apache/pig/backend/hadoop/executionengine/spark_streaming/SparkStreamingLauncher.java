@@ -112,12 +112,12 @@ public class SparkStreamingLauncher extends Launcher {
 //        convertMap.put(POSort.class, new SortConverter());
 //        convertMap.put(POSplit.class, new SplitConverter());
 
-        Map<OperatorKey, JavaDStream<Tuple>> rdds = new HashMap<OperatorKey, JavaDStream<Tuple>>();
+        Map<OperatorKey, JavaDStream<Tuple>> mapOfDStreams = new HashMap<OperatorKey, JavaDStream<Tuple>>();
 
         SparkStats stats = new SparkStats();
         LinkedList<POStore> stores = PlanHelper.getPhysicalOperators(physicalPlan, POStore.class);
         for (POStore poStore : stores) {
-            physicalToRDD(physicalPlan, poStore, rdds, convertMap);
+            physicalToRDD(physicalPlan, poStore, mapOfDStreams, convertMap);
             stats.addOutputInfo(poStore, 1, 1, true, c); // TODO: use real values
         }
         sparkContext.start();
@@ -184,17 +184,17 @@ public class SparkStreamingLauncher extends Launcher {
     }
 
     private void physicalToRDD(PhysicalPlan plan, PhysicalOperator physicalOperator,
-                               Map<OperatorKey, JavaDStream<Tuple>> rdds,
+                               Map<OperatorKey, JavaDStream<Tuple>> mapOfDStreams,
                                Map<Class<? extends PhysicalOperator>, POConverter> convertMap)
             throws IOException {
 
-        JavaDStream nextRDD = null;
+        JavaDStream<Tuple> nextDStream = null;
         List<PhysicalOperator> predecessors = plan.getPredecessors(physicalOperator);
-        List<JavaDStream<Tuple>> predecessorRdds = Lists.newArrayList();
+        List<JavaDStream<Tuple>> predecessorDStreams = Lists.newArrayList();
         if (predecessors!=null) {
             for (PhysicalOperator predecessor : predecessors) {
-                physicalToRDD(plan, predecessor, rdds, convertMap);
-                predecessorRdds.add(rdds.get(predecessor.getOperatorKey()));
+                physicalToRDD(plan, predecessor, mapOfDStreams, convertMap);
+                predecessorDStreams.add(mapOfDStreams.get(predecessor.getOperatorKey()));
             }
         }
 
@@ -204,17 +204,17 @@ public class SparkStreamingLauncher extends Launcher {
         }
 
         LOG.info("Converting operator " + physicalOperator.getClass().getSimpleName()+" "+physicalOperator);
-        nextRDD = converter.convert(predecessorRdds, physicalOperator);
+        nextDStream = converter.convert(predecessorDStreams, physicalOperator);
 
         if (POStore.class.equals(physicalOperator.getClass())) {
             return;
         }
 
-        if (nextRDD == null) {
+        if (nextDStream == null) {
             throw new IllegalArgumentException("RDD should not be null after PhysicalOperator: " + physicalOperator);
         }
 
-        rdds.put(physicalOperator.getOperatorKey(), nextRDD);
+        mapOfDStreams.put(physicalOperator.getOperatorKey(), nextDStream);
     }
 
     @Override

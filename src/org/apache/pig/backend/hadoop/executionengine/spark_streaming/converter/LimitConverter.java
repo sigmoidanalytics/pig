@@ -45,9 +45,9 @@ public class LimitConverter implements POConverter<Tuple, Tuple, POLimit> {
 	public JavaDStream<Tuple> convert(List<JavaDStream<Tuple>> predecessors,
 			POLimit poLimit) throws IOException {
         SparkUtil.assertPredecessorSize(predecessors, poLimit, 1);
-        JavaDStream<Tuple> rdd = predecessors.get(0);
+        JavaDStream<Tuple> inputDStream = predecessors.get(0);
         LimitFunction limitFunction = new LimitFunction(poLimit);
-        return new JavaDStream<Tuple>(rdd.dstream().mapPartitions(limitFunction, false, SparkUtil.getManifest(Tuple.class)), SparkUtil.getManifest(Tuple.class));
+        return new JavaDStream<Tuple>(inputDStream.dstream().mapPartitions(limitFunction, false, SparkUtil.getManifest(Tuple.class)), SparkUtil.getManifest(Tuple.class));
     }
 
     private static class LimitFunction extends Function<Iterator<Tuple>, Iterator<Tuple>> implements Serializable {
