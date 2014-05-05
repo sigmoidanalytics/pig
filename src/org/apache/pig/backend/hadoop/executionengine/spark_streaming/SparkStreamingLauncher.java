@@ -36,9 +36,11 @@ import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOpe
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.util.PlanHelper;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.DistinctConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.FilterConverter;
+import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.ForEachConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.LimitConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.LoadConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.POConverter;
+import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.SortConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.StoreConverter;
 import org.apache.pig.data.SchemaTupleBackend;
 import org.apache.pig.data.Tuple;
@@ -100,7 +102,7 @@ public class SparkStreamingLauncher extends Launcher {
 
         convertMap.put(POLoad.class,    new LoadConverter(pigContext, physicalPlan, sparkContext));
         convertMap.put(POStore.class,   new StoreConverter(pigContext));
-//        convertMap.put(POForEach.class, new ForEachConverter());
+        convertMap.put(POForEach.class, new ForEachConverter());
         convertMap.put(POFilter.class,  new FilterConverter());
 //        convertMap.put(POPackage.class, new PackageConverter());
 //        convertMap.put(POCache.class,   cacheConverter);
@@ -109,7 +111,7 @@ public class SparkStreamingLauncher extends Launcher {
         convertMap.put(POLimit.class, new LimitConverter());
         convertMap.put(PODistinct.class, new DistinctConverter());
 //        convertMap.put(POUnion.class, new UnionConverter(sparkContext));
-//        convertMap.put(POSort.class, new SortConverter());
+        convertMap.put(POSort.class, new SortConverter());
 //        convertMap.put(POSplit.class, new SplitConverter());
 
         Map<OperatorKey, JavaDStream<Tuple>> mapOfDStreams = new HashMap<OperatorKey, JavaDStream<Tuple>>();
