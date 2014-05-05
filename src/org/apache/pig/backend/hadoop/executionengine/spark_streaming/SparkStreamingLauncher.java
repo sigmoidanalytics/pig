@@ -96,7 +96,8 @@ public class SparkStreamingLauncher extends Launcher {
 /////////
 
         startSparkIfNeeded();
-
+        Configuration newC = sparkContext.ssc().sc().hadoopConfiguration();
+        newC.set("pig.udf.context",c.get("pig.udf.context") );
         // initialize the supported converters
         Map<Class<? extends PhysicalOperator>, POConverter> convertMap =
                 new HashMap<Class<? extends PhysicalOperator>, POConverter>();

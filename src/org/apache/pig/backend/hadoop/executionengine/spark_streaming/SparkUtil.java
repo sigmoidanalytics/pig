@@ -1,5 +1,6 @@
 package org.apache.pig.backend.hadoop.executionengine.spark_streaming;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.pig.backend.hadoop.datastorage.ConfigurationUtil;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.PhysicalOperator;
@@ -48,6 +49,7 @@ public class SparkUtil {
         jobConf.set("udf.import.list", ObjectSerializer.serialize(PigContext.getPackageImportList()));
         return jobConf;
     }
+    
 
     public static <T> Seq<T> toScalaSeq(List<T> list) {
         return JavaConversions.asScalaBuffer(list);
