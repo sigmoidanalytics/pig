@@ -37,9 +37,12 @@ import org.apache.pig.backend.hadoop.executionengine.physicalLayer.util.PlanHelp
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.DistinctConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.FilterConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.ForEachConverter;
+import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.GlobalRearrangeConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.LimitConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.LoadConverter;
+import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.LocalRearrangeConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.POConverter;
+import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.PackageConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.SortConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.SplitConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.StoreConverter;
@@ -110,10 +113,10 @@ public class SparkStreamingLauncher extends Launcher {
         convertMap.put(PODistinct.class, new DistinctConverter());
         convertMap.put(POSort.class, new SortConverter());
         convertMap.put(POSplit.class, new SplitConverter());
-//      convertMap.put(POPackage.class, new PackageConverter());
+      convertMap.put(POPackage.class, new PackageConverter());
 //      convertMap.put(POCache.class,   cacheConverter);
-//      convertMap.put(POLocalRearrange.class,  new LocalRearrangeConverter());
-//      convertMap.put(POGlobalRearrange.class, new GlobalRearrangeConverter());
+      convertMap.put(POLocalRearrange.class,  new LocalRearrangeConverter());
+      convertMap.put(POGlobalRearrange.class, new GlobalRearrangeConverter());
 //      convertMap.put(POUnion.class, new UnionConverter(sparkContext));
 
         

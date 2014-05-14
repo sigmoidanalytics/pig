@@ -63,7 +63,7 @@ public class SparkUtil {
         }
     }
 
-    public static void assertPredecessorSizeGreaterThan(List<RDD<Tuple>> predecessors,
+    public static void assertPredecessorSizeGreaterThan(List<JavaDStream<Tuple>> predecessors,
                                              PhysicalOperator physicalOperator, int size) {
         if (predecessors.size() <= size) {
             throw new RuntimeException("Should have greater than" + size + " predecessors for " +
