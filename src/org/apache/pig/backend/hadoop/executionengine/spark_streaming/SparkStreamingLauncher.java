@@ -46,6 +46,7 @@ import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.P
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.SortConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.SplitConverter;
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.StoreConverter;
+import org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter.UnionConverter;
 import org.apache.pig.data.SchemaTupleBackend;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.PigContext;
@@ -117,7 +118,7 @@ public class SparkStreamingLauncher extends Launcher {
 //      convertMap.put(POCache.class,   cacheConverter);
       convertMap.put(POLocalRearrange.class,  new LocalRearrangeConverter());
       convertMap.put(POGlobalRearrange.class, new GlobalRearrangeConverter());
-//      convertMap.put(POUnion.class, new UnionConverter(sparkContext));
+      convertMap.put(POUnion.class, new UnionConverter(sparkContext));
 
         
         Map<OperatorKey, JavaDStream<Tuple>> mapOfDStreams = new HashMap<OperatorKey, JavaDStream<Tuple>>();
