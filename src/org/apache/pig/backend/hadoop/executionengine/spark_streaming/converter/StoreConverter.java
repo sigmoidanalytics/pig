@@ -5,6 +5,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.pig.StoreFuncInterface;
@@ -36,7 +38,7 @@ import com.google.common.collect.Lists;
  */
 @SuppressWarnings({ "serial"})
 public class StoreConverter implements POConverter<Tuple, Tuple2<Text, Tuple>, POStore> {
-
+	private static final Log LOG = LogFactory.getLog(GlobalRearrangeConverter.class);
     private static final FromTupleFunction FROM_TUPLE_FUNCTION = new FromTupleFunction();
 
     private PigContext pigContext;
@@ -48,12 +50,13 @@ public class StoreConverter implements POConverter<Tuple, Tuple2<Text, Tuple>, P
     
     @Override
     public JavaDStream<Tuple> convert(List<JavaDStream<Tuple>> predecessors, POStore physicalOperator) throws IOException {
+
         SparkUtil.assertPredecessorSize(predecessors, physicalOperator, 1);
         JavaDStream<Tuple> rdd = predecessors.get(0);
         JobConf storeJobConf = SparkUtil.newJobConf(pigContext);
         POStore poStore = configureStorer(storeJobConf, physicalOperator);
-        
-        rdd.print();
+        rdd.dstream().print();
+        //rdd.dstream().saveAsObjectFiles("hdfs://localhost:9000/output", "mayur");
 
         return rdd;
     }

@@ -62,10 +62,10 @@ public class GlobalRearrangeConverter implements POConverter<Tuple, Tuple, POGlo
         if (predecessors.size() == 1) {
             //GROUP
         	
-        	return  predecessors.get(0).map(CREATE_PAIR_FUNCTION).groupByKey().map(GET_KEY_FUNCTION);
+        	return  predecessors.get(0).map(CREATE_PAIR_FUNCTION).groupByKey().map(GROUP_TUPLE_FUNCTION);
         	
         } else {
-        	return  predecessors.get(0).map(CREATE_PAIR_FUNCTION).groupByKey().map(GET_KEY_FUNCTION);
+        	return  predecessors.get(0).map(CREATE_PAIR_FUNCTION).groupByKey().map(GROUP_TUPLE_FUNCTION);
         		/*
             //COGROUP
             // each pred returns (index, key, value)
@@ -90,15 +90,16 @@ public class GlobalRearrangeConverter implements POConverter<Tuple, Tuple, POGlo
         }
     }
     
-    private static class GetKeyFunction extends Function<Tuple2<Object,List<Tuple>>, Tuple> implements Serializable {
+    private static class GetKeyFunction extends Function<Tuple2<Tuple,List<Tuple>>, Tuple> implements Serializable {
 
     	@Override
-		public Tuple call(Tuple2<Object, List<Tuple>> t) throws Exception {
+		public Tuple call(Tuple2<Tuple, List<Tuple>> t) throws Exception {
     		
                 LOG.debug("GetKeyFunction in "+t);
                 // see PigGenericMapReduce For the key
                 Tuple tuple = tf.newTuple();
-                tuple.append(t._2);
+                tuple.append(t._1);
+                tuple.append(t._2.iterator());
                 LOG.debug("GetKeyFunction out "+tuple);
                 return tuple;
          
@@ -112,9 +113,8 @@ public class GlobalRearrangeConverter implements POConverter<Tuple, Tuple, POGlo
     private static class CreatePairFunction extends PairFunction<Tuple, Object, Tuple>  implements Serializable {
 
     	@Override public Tuple2<Object, Tuple> call(Tuple s) throws Exception {
-    				Tuple tuple = tf.newTuple();
-    				tuple.append( s.get(2));
-			      return new Tuple2<Object, Tuple>(s.get(1),tuple);
+    				Tuple2<Object, Tuple> output=new Tuple2<Object, Tuple>(s.get(1),s);
+			      return output;
 			    }
     }
 
