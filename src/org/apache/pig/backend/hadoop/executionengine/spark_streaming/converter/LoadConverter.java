@@ -3,6 +3,8 @@ package org.apache.pig.backend.hadoop.executionengine.spark_streaming.converter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hadoop.mapred.JobConf;
@@ -15,10 +17,14 @@ import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOpe
 import org.apache.pig.backend.hadoop.executionengine.spark_streaming.SparkUtil;
 import org.apache.pig.data.DefaultTuple;
 import org.apache.pig.data.Tuple;
+import org.apache.pig.data.TupleFactory;
 import org.apache.pig.impl.PigContext;
 import org.apache.pig.impl.io.FileSpec;
 import org.apache.pig.impl.plan.OperatorKey;
 import org.apache.pig.impl.util.ObjectSerializer;
+import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.streaming.DStream;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
@@ -27,9 +33,16 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 
 import scala.Function1;
+import scala.Option;
 import scala.Tuple2;
 import scala.reflect.ClassManifest;
 import scala.runtime.AbstractFunction1;
+import twitter4j.Status;
+import twitter4j.Twitter;
+import twitter4j.TwitterFactory;
+import twitter4j.auth.AccessToken;
+import twitter4j.auth.Authorization;
+import twitter4j.auth.BasicAuthorization;
 
 import com.google.common.collect.Lists;
 
@@ -44,7 +57,7 @@ import com.google.common.collect.Lists;
 public class LoadConverter implements POConverter<Tuple, Tuple, POLoad> {
 
 	private static final Function1<Tuple2<Text, Tuple>, Tuple> TO_VALUE_FUNCTION = new ToTupleFunction();
-     
+	
     private PigContext pigContext;
     private PhysicalPlan physicalPlan;
     private JavaStreamingContext sparkContext;
@@ -60,16 +73,71 @@ public class LoadConverter implements POConverter<Tuple, Tuple, POLoad> {
 //        if (predecessors.size()!=0) {
 //            throw new RuntimeException("Should not have predecessors for Load. Got : "+predecessors);
 //        }
-    		configureLoader(physicalPlan, poLoad, sparkContext.ssc().sc().hadoopConfiguration(),this.pigContext);
-        DStream<Tuple2<Text, Tuple>> hadoopRDD= sparkContext.ssc().fileStream(poLoad.getLFile().getFileName(), 
-				SparkUtil.getManifest(Text.class), 
-				SparkUtil.getManifest(Tuple.class), 
-				SparkUtil.getManifest(PigInputFormat.class));
-        // map to get just RDD<Tuple>
-        return new JavaDStream<Tuple>(hadoopRDD.map(TO_VALUE_FUNCTION,SparkUtil.getManifest(Tuple.class)), 
-        		SparkUtil.getManifest(Tuple.class));
+    	configureLoader(physicalPlan, poLoad, sparkContext.ssc().sc().hadoopConfiguration(),this.pigContext);
+    		
+    	Iterator<PhysicalOperator> top = physicalPlan.iterator();
+    	boolean isTwitter = false;
+    	while(top.hasNext()){    		
+    		String load = top.next().toString();
+    		
+    		if(load.contains("hdfs://")){
+    			String[] splitted = load.split("hdfs://");       		 
+        		String url = "hdfs://" + splitted[1];
+        		
+        		if(url.contains("/_twitter")){
+        			isTwitter = true;        			
+        		}
+        		break;
+        		
+    		}
+    		
+    	}
+    	
+       if(!isTwitter){
+    	   
+           DStream<Tuple2<Text, Tuple>> hadoopRDD= sparkContext.ssc().fileStream(poLoad.getLFile().getFileName(), 
+   				SparkUtil.getManifest(Text.class), 
+   				SparkUtil.getManifest(Tuple.class), 
+   				SparkUtil.getManifest(PigInputFormat.class));
+           
+           return new JavaDStream<Tuple>(hadoopRDD.map(TO_VALUE_FUNCTION,SparkUtil.getManifest(Tuple.class)),SparkUtil.getManifest(Tuple.class));
+           
+       }else{
+    	   
+       		System.out.println("=====Tweeets-Tweets=======");
+    		System.setProperty("twitter4j.oauth.consumerKey","mGkece93BmDILkPGJ58lu5OS6");
+    		System.setProperty("twitter4j.oauth.consumerSecret","K9RhnuOdZJlxDgxKJawq1PLXmZYqdt3asvKvo4aqu6Mhe9yY2n");
+    		System.setProperty("twitter4j.oauth.accessToken","2493987132-FxZ2Explk2AyGeIjUnHpw1ZzPQxvFBIFPRs0Ho7");
+    		System.setProperty("twitter4j.oauth.accessTokenSecret","uBm4qg0eR4HRv9Byh45ja0qhzlikQ0KxfqByVrtzs3jYP");
+    		//sparkContext.checkpoint("/home/akhld/mobi/temp/pig/twitter/");
+    		
+    		JavaDStream<Status> dtweets= sparkContext.twitterStream();   		
+    		
+ 
+    		System.out.println("=====Tweeets-Tweets=======");   		
+    		
+    		testFunction fnc = new testFunction();
+    		DStream<Tuple> dstatuses = dtweets.dstream().map(fnc,SparkUtil.getManifest(Tuple.class));    		
+    		
+    		//return tweet tuples;
+    		return new JavaDStream<>(dstatuses, SparkUtil.getManifest(Tuple.class));  
+    		
+       }
+       
     }
-
+    
+    private static class testFunction extends Function<Status, Tuple> implements Serializable {
+		@Override
+		public Tuple call(Status status) throws Exception {
+			ArrayList<String> al = new ArrayList<String>();
+			al.add(status.getText());
+			TupleFactory mTupleFactory = TupleFactory.getInstance();
+			Tuple t =  mTupleFactory.newTupleNoCopy(al);
+			return t;
+		}
+    }
+    
+    
     private static class ToTupleFunction extends AbstractFunction1<Tuple2<Text, Tuple>,Tuple>
             implements Function1<Tuple2<Text, Tuple>,Tuple>, Serializable {
 
@@ -126,3 +194,4 @@ public class LoadConverter implements POConverter<Tuple, Tuple, POLoad> {
         return configuration;
     }
 }
+
