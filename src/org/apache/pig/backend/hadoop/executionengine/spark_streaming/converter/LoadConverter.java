@@ -120,7 +120,7 @@ public class LoadConverter implements POConverter<Tuple, Tuple, POLoad> {
     		DStream<Tuple> dstatuses = dtweets.dstream().map(fnc,SparkUtil.getManifest(Tuple.class));    		
     		
     		//return tweet tuples;
-    		return new JavaDStream<>(dstatuses, SparkUtil.getManifest(Tuple.class));  
+    		return new JavaDStream<Tuple>(dstatuses, SparkUtil.getManifest(Tuple.class));  
     		
        }
        
