@@ -269,6 +269,7 @@ LoadPushDown, LoadMetadata, StoreMetadata {
     }
 
     private Tuple applySchema(Tuple tup) throws IOException {
+    	
         if ( caster == null) {
             caster = getLoadCaster();
         }

@@ -114,11 +114,11 @@ public class SparkStreamingLauncher extends Launcher {
         convertMap.put(PODistinct.class, new DistinctConverter());
         convertMap.put(POSort.class, new SortConverter());
         convertMap.put(POSplit.class, new SplitConverter());
-      convertMap.put(POPackage.class, new PackageConverter());
-//      convertMap.put(POCache.class,   cacheConverter);
-      convertMap.put(POLocalRearrange.class,  new LocalRearrangeConverter());
-      convertMap.put(POGlobalRearrange.class, new GlobalRearrangeConverter());
-      convertMap.put(POUnion.class, new UnionConverter(sparkContext));
+	  convertMap.put(POPackage.class, new PackageConverter());
+	//      convertMap.put(POCache.class,   cacheConverter);
+	  convertMap.put(POLocalRearrange.class,  new LocalRearrangeConverter());
+	  convertMap.put(POGlobalRearrange.class, new GlobalRearrangeConverter());
+	  convertMap.put(POUnion.class, new UnionConverter(sparkContext));
 
         
         Map<OperatorKey, JavaDStream<Tuple>> mapOfDStreams = new HashMap<OperatorKey, JavaDStream<Tuple>>();
@@ -177,9 +177,9 @@ public class SparkStreamingLauncher extends Launcher {
                 maxCores = Integer.parseInt(System.getenv("SPARK_MAX_CPUS"));
                 System.setProperty("spark.cores.max", "" + maxCores);
             }
-            System.setProperty("spark.cores.max", "1" );
+            System.setProperty("spark.cores.max", "2" );
             System.setProperty("spark.executor.memory", "" + "2g");
-            JavaStreamingContext javaContext = new JavaStreamingContext(master, "Spork", new Duration(5000), sparkHome, jars.toArray(new String[jars.size()]));
+            JavaStreamingContext javaContext = new JavaStreamingContext(master, "Spork", new Duration(6000), sparkHome, jars.toArray(new String[jars.size()]));
             sparkContext = javaContext;
         }
     }
