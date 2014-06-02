@@ -58,7 +58,7 @@ import org.apache.spark.scheduler.JobLogger;
 import org.apache.spark.scheduler.StatsReportListener;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.streaming.DStream;
+import org.apache.spark.streaming.dstream.DStream;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.StreamingContext;
 import org.apache.spark.streaming.api.java.JavaDStream;

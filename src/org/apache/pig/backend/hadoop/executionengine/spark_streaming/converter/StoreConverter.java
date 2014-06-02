@@ -30,7 +30,7 @@ import twitter4j.Status;
 
 import org.apache.spark.rdd.PairRDDFunctions;
 import org.apache.spark.rdd.RDD;
-import org.apache.spark.streaming.DStream;
+import org.apache.spark.streaming.dstream.DStream;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.api.java.JavaRDD;
@@ -65,10 +65,10 @@ public class StoreConverter implements POConverter<Tuple, Tuple2<Text, Tuple>, P
 
 		final POStore poperator = physicalOperator;
 
-		JobConf storeJobConf = SparkUtil.newJobConf(pigContext);
-		POStore poStore = configureStorer(storeJobConf, physicalOperator);
+		//JobConf storeJobConf = SparkUtil.newJobConf(pigContext);
+		//POStore poStore = configureStorer(storeJobConf, physicalOperator);
 
-		rdd.print();
+		//rdd.print();
 
 		System.out.println("DCount ====>>>" +  rdd.dstream().count());
 		testFunction fnc = new testFunction();
@@ -84,7 +84,7 @@ public class StoreConverter implements POConverter<Tuple, Tuple2<Text, Tuple>, P
 
 		DStream<Tuple2<Text, Tuple>> dstatuses = rdd.dstream().map(FROM_TUPLE_FUNCTION, SparkUtil.<Text, Tuple>getTuple2Manifest());
 
-		//dstatuses.print();
+		dstatuses.print();
 
 		dstatuses.foreach(
 				new Function<RDD<Tuple2<Text, Tuple>>,BoxedUnit>(){

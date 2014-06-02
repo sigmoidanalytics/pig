@@ -25,7 +25,8 @@ import org.apache.pig.impl.util.ObjectSerializer;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
-import org.apache.spark.streaming.DStream;
+import org.apache.spark.streaming.dstream.DStream;
+import org.apache.spark.streaming.twitter.TwitterUtils;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
@@ -36,7 +37,7 @@ import org.apache.hadoop.io.Text;
 import scala.Function1;
 import scala.Option;
 import scala.Tuple2;
-import scala.reflect.ClassManifest;
+import scala.reflect.ClassTag;
 import scala.runtime.AbstractFunction1;
 import twitter4j.Status;
 import twitter4j.Twitter;
@@ -129,7 +130,8 @@ public class LoadConverter implements POConverter<Tuple, Tuple, POLoad> {
 			System.setProperty("twitter4j.oauth.accessTokenSecret","uBm4qg0eR4HRv9Byh45ja0qhzlikQ0KxfqByVrtzs3jYP");
 			//sparkContext.checkpoint("/home/akhld/mobi/temp/pig/twitter/");
 
-			JavaDStream<Status> dtweets= sparkContext.twitterStream();    		
+			//JavaDStream<Status> dtweets= sparkContext.twitterStream();
+			JavaDStream<Status> dtweets = TwitterUtils.createStream(sparkContext);
 
 			System.out.println("=====Tweeets-Tweets=======");
 

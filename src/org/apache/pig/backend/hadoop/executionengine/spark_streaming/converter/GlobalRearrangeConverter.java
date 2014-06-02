@@ -21,7 +21,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.rdd.CoGroupedRDD;
 import org.apache.spark.rdd.RDD;
-import org.apache.spark.streaming.DStream;
+import org.apache.spark.streaming.dstream.DStream;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 
@@ -30,7 +30,7 @@ import scala.Product2;
 import scala.Tuple2;
 import scala.collection.JavaConversions;
 import scala.collection.Seq;
-import scala.reflect.ClassManifest;
+import scala.reflect.ClassTag;
 import scala.runtime.AbstractFunction1;
 
 @SuppressWarnings({ "serial"})
@@ -69,11 +69,11 @@ public class GlobalRearrangeConverter implements POConverter<Tuple, Tuple, POGlo
         		/*
             //COGROUP
             // each pred returns (index, key, value)
-            ClassManifest<Tuple2<Object, Tuple>> tuple2ClassManifest = SparkUtil.<Object, Tuple>getTuple2Manifest();
+            ClassTag<Tuple2<Object, Tuple>> tuple2ClassTag = SparkUtil.<Object, Tuple>getTuple2Manifest();
             
             List<JavaDStream<Tuple2<Object, Tuple>>> rddPairs = new ArrayList();
             for (JavaDStream<Tuple> rdd : predecessors) {
-            	JavaDStream<Tuple2<Object, Tuple>> rddPair = rdd.map(TO_KEY_VALUE_FUNCTION, tuple2ClassManifest);
+            	JavaDStream<Tuple2<Object, Tuple>> rddPair = rdd.map(TO_KEY_VALUE_FUNCTION, tuple2ClassTag);
                 rddPairs.add(rddPair);
             }
 

@@ -41,7 +41,7 @@ export HADOOP_INSTALL=/home/akhld/mobi/localcluster/hadoop
 #export PIG_CLASSPATH=/home/akhld/mobi/localcluster/hadoop/:/home/akhld/mobi/localcluster/codes/pig/conf
 export PIG_HOME=/home/akhld/mobi/localcluster/codes/pig
 export SPARK_HOME=/home/akhld/mobi/localcluster/spark
-export SPARK_JAR=/home/akhld/mobi/localcluster/codes/pig/build/ivy/lib/Pig/spark-core_2.9.3-0.8.1-incubating.jar
+#export SPARK_JAR=/home/akhld/mobi/localcluster/codes/pig/build/ivy/lib/Pig/spark-core_2.9.3-0.8.1-incubating.jar
 #export SPARK_MASTER=spark://akhldz:7077
 
 # Cluster settings

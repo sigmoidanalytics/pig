@@ -8,7 +8,7 @@ import org.apache.pig.backend.hadoop.executionengine.physicalLayer.PhysicalOpera
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POLoad;
 import org.apache.pig.data.Tuple;
 import org.apache.spark.rdd.RDD;
-import org.apache.spark.streaming.DStream;
+import org.apache.spark.streaming.dstream.DStream;
 import org.apache.spark.streaming.api.java.JavaDStream;
 
 import scala.Tuple2;

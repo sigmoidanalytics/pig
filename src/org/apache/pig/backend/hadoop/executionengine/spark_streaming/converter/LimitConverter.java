@@ -14,7 +14,7 @@ import org.apache.pig.data.Tuple;
 import scala.Function1;
 import scala.Function2;
 import scala.Tuple2;
-import scala.reflect.ClassManifest;
+import scala.reflect.ClassTag;
 import scala.runtime.AbstractFunction1;
 import scala.runtime.AbstractFunction2;
 
@@ -22,7 +22,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.rdd.PairRDDFunctions;
 import org.apache.spark.rdd.RDD;
-import org.apache.spark.streaming.DStream;
+import org.apache.spark.streaming.dstream.DStream;
 import org.apache.spark.streaming.api.java.JavaDStream;
 
 import java.io.IOException;
