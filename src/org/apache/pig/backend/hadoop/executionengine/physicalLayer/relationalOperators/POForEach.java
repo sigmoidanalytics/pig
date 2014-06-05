@@ -48,6 +48,7 @@ import org.apache.pig.impl.plan.OperatorKey;
 import org.apache.pig.impl.plan.VisitorException;
 import org.apache.pig.pen.util.ExampleTuple;
 import org.apache.pig.pen.util.LineageTracer;
+import org.mortbay.log.Log;
 
 //We intentionally skip type checking in backend for performance reasons
 @SuppressWarnings("unchecked")
@@ -108,6 +109,9 @@ public class POForEach extends PhysicalOperator {
 
     public POForEach(OperatorKey k, int rp, List<PhysicalPlan> inp, List<Boolean>  isToBeFlattened){
         super(k, rp);
+        
+        Log.info("=========POForEach=======");
+        
         setUpFlattens(isToBeFlattened);
         this.inputPlans = inp;
         opsToBeReset = new ArrayList<PhysicalOperator>();
@@ -333,6 +337,7 @@ public class POForEach extends PhysicalOperator {
             tupleMaker = TupleFactory.getInstance();
         }
 
+        
         Result res = new Result();
 
         //We check if all the databags have exhausted the tuples. If so we enforce the reading of new data by setting data and its to null

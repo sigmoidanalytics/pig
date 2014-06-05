@@ -137,7 +137,7 @@ done
 
 # add user-specified CLASSPATH last
 if [ "$PIG_CLASSPATH" != "" ]; then
-    CLASSPATH=${CLASSPATH}:${PIG_CLASSPATH}
+    CLASSPATH=${PIG_CLASSPATH}:${CLASSPATH}
 fi
 
 # default log directory & file

@@ -145,7 +145,8 @@ public class SparkStreamingLauncher extends Launcher {
             String sparkJarsSetting = System.getenv("SPARK_JARS");
             String pigJar = System.getenv("SPARK_PIG_JAR");
             if(pigJar == null) {
-                pigJar = "build/pig-0.12.0-SNAPSHOT-withouthadoop.jar";
+                //pigJar = "build/pig-0.12.0-SNAPSHOT-withouthadoop.jar";
+            	pigJar = "build/pig-0.12.0-SNAPSHOT.jar";
             }
             String[] sparkJars = sparkJarsSetting == null ? new String[]{} : sparkJarsSetting.split(",");
 
@@ -178,7 +179,7 @@ public class SparkStreamingLauncher extends Launcher {
                 System.setProperty("spark.cores.max", "" + maxCores);
             }
             System.setProperty("spark.cores.max", "2" );
-            System.setProperty("spark.executor.memory", "" + "2g");
+            System.setProperty("spark.executor.memory", "" + "512m");
             JavaStreamingContext javaContext = new JavaStreamingContext(master, "Spork", new Duration(6000), sparkHome, jars.toArray(new String[jars.size()]));
             sparkContext = javaContext;
         }

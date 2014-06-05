@@ -20,9 +20,9 @@ export HADOOP_HOME=/home/akhld/mobi/localcluster/hadoop/
 
 # To debug OOMs
 #export SPARK_JAVA_OPTS=" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heap.dump"
-
+#export SPARK_JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=12345,server=y,suspend=y"
 # Settings to work with YARN, spark jar compiled with hadoop 2
-export SPARK_MASTER=local
+export SPARK_MASTER=spark://127.0.0.1:7077
 
 #if want to run on spark master
 #export SPARK_MASTER=spark://-------:7077
@@ -31,13 +31,17 @@ export SPARK_MASTER=local
 
 
 # jars to ship, pig-withouthadoop.jar to workaround Classloader issue
-#export SPARK_JAR=/Users/mayur/Desktop/BuildSpark/pig/build/ivy/lib/Pig/spark-core_2.9.3-0.8.1-incubating.jar
 
 # Pig settings
-export PIG_CLASSPATH=/home/akhld/mobi/localcluster/codes/pig/pig-withouthadoop.jar:/home/akhld/mobi/localcluster/codes/pig/lib/spark/mesos-0.9.0.jar:/home/akhld/mobi/localcluster/codes/pig/build/ivy/lib/Pig/*:$HADOOP_CONF_DIR:/home/akhld/mobi/localcluster/codes/pig/conf
+export PIG_CLASSPATH=/home/akhld/mobi/localcluster/codes/pig/build/ivy/lib/Pig/netty-3.6.6.Final.jar:/home/akhld/mobi/localcluster/codes/pig/pig-withouthadoop.jar:/home/akhld/mobi/localcluster/codes/pig/lib/spark/mesos-0.9.0.jar:/home/akhld/mobi/localcluster/codes/pig/build/ivy/lib/Pig/*:$HADOOP_CONF_DIR:/home/akhld/mobi/localcluster/codes/pig/conf
+#export PIG_CLASSPATH=/home/akhld/mobi/localcluster/codes/pig/pig-withouthadoop.jar:/home/akhld/mobi/localcluster/hadoop/:/home/akhld/mobi/localcluster/codes/pig/conf
 
-export HADOOP_COMMON_HOME=/home/akhld/mobi/localcluster/hadoop
-export HADOOP_INSTALL=/home/akhld/mobi/localcluster/hadoop
+export SPARK_JARS="/home/akhld/mobi/localcluster/codes/pig/build/pig-0.12.0-SNAPSHOT-withdependencies.jar,/home/akhld/mobi/localcluster/codes/pig/build/ivy/lib/Pig/twitter4j-core-3.0.3.jar,/home/akhld/mobi/localcluster/codes/pig/build/ivy/lib/Pig/twitter4j-stream-3.0.3.jar"
+
+export SPARK_PIG_JAR=/home/akhld/mobi/localcluster/codes/pig/pig.jar
+
+#export HADOOP_COMMON_HOME=/home/akhld/mobi/localcluster/hadoop
+#export HADOOP_INSTALL=/home/akhld/mobi/localcluster/hadoop
 #export PIG_CLASSPATH=/home/akhld/mobi/localcluster/hadoop/:/home/akhld/mobi/localcluster/codes/pig/conf
 export PIG_HOME=/home/akhld/mobi/localcluster/codes/pig
 export SPARK_HOME=/home/akhld/mobi/localcluster/spark
@@ -46,7 +50,8 @@ export SPARK_HOME=/home/akhld/mobi/localcluster/spark
 
 # Cluster settings
 export SPARK_WORKER_CORES=1
-export SPARK_WORKER_MEMORY=1g
+export SPARK_WORKER_MEMORY=512m
+export SPARK_MEM=512m
 export SPARK_WORKER_INSTANCES=1
 
 bin/pig -x spark "$@"

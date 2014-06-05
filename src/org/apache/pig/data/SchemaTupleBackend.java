@@ -58,7 +58,7 @@ public class SchemaTupleBackend {
     private URLClassLoader classLoader;
     private Map<Triple<SchemaKey, Boolean, GenContext>, SchemaTupleFactory> schemaTupleFactoriesByTriple = Maps.newHashMap();
     private Map<Integer, SchemaTupleFactory> schemaTupleFactoriesById = Maps.newHashMap();
-    private Configuration jConf;
+    private static Configuration jConf;
 
     private File codeDir;
 
@@ -284,7 +284,12 @@ public class SchemaTupleBackend {
         if (stb == null) {
             // It is possible (though ideally should be avoided) for this to be called on the frontend if
             // the Tuple processing path of the POPlan is invoked (perhaps for optimization purposes)
-            throw new RuntimeException("initialize was not called! Even when SchemaTuple feature is not set, it should be called.");
+            //throw new RuntimeException("initialize was not called! Even when SchemaTuple feature is not set, it should be called.");
+        	        	
+        	SchemaTupleBackend stbInstance = new SchemaTupleBackend(jConf, false);
+            try { stbInstance.copyAndResolve(); }catch(Exception e) { e.printStackTrace(); }
+            
+            stb = stbInstance;
         }
         return stb.internalNewSchemaTupleFactory(s, isAppendable, context);
     }

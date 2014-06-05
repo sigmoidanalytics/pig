@@ -68,7 +68,7 @@ public class StoreConverter implements POConverter<Tuple, Tuple2<Text, Tuple>, P
 		//JobConf storeJobConf = SparkUtil.newJobConf(pigContext);
 		//POStore poStore = configureStorer(storeJobConf, physicalOperator);
 
-		//rdd.print();
+		rdd.print();
 
 		System.out.println("DCount ====>>>" +  rdd.dstream().count());
 		testFunction fnc = new testFunction();
@@ -77,7 +77,7 @@ public class StoreConverter implements POConverter<Tuple, Tuple2<Text, Tuple>, P
 		DStream<Text> dts = rdd.dstream().map(fnc, SparkUtil.getManifest(Text.class));
 		dts.print();
 		dts.saveAsTextFiles(poStore.getSFile().getFileName(), "" + System.currentTimeMillis());
-		 */
+		*/
 
 		//rdd.dstream().saveAsObjectFiles(poStore.getSFile().getFileName(), "" + System.currentTimeMillis());
 
@@ -86,7 +86,7 @@ public class StoreConverter implements POConverter<Tuple, Tuple2<Text, Tuple>, P
 
 		dstatuses.print();
 
-		dstatuses.foreach(
+		dstatuses.foreachRDD(
 				new Function<RDD<Tuple2<Text, Tuple>>,BoxedUnit>(){
 					@Override
 					public BoxedUnit call(RDD<Tuple2<Text, Tuple>> rdd) throws Exception {
@@ -98,7 +98,6 @@ public class StoreConverter implements POConverter<Tuple, Tuple2<Text, Tuple>, P
 
 							JobConf storeJobConf = SparkUtil.newJobConf(pigContext);
 							POStore poStore = configureStorer(storeJobConf, poperator);
-
 
 							pairRDDFunctions.saveAsNewAPIHadoopFile(poStore.getSFile().getFileName(),Text.class, Tuple.class, PigOutputFormat.class, storeJobConf);
 
