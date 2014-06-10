@@ -45,7 +45,6 @@ STORE C INTO 'hdfs://localhost:9000/output';
 
 
 -- UDF
-
 REGISTER /Users/praveenr/Desktop/tutorial.jar;
 A = load 'hdfs://localhost:9000/udf-input/' USING PigStorage('\t') AS (user:chararray, time:int, query:chararray);
 B = FOREACH A GENERATE org.apache.pig.tutorial.ToLower(query);
