@@ -44,6 +44,11 @@ rmf '/output';
 STORE C INTO 'hdfs://localhost:9000/output'; 
 
 
+A = load 'hdfs://localhost:9000/input/' USING PigStorage(',') AS (p, q, r);
+B = GROUP A BY p;
+STORE B INTO '/tmp/groupby';
+
+
 -- UDF
 REGISTER /Users/praveenr/Desktop/tutorial.jar;
 A = load 'hdfs://localhost:9000/udf-input/' USING PigStorage('\t') AS (user:chararray, time:int, query:chararray);
