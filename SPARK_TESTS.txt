@@ -8,7 +8,6 @@ B = LIMIT A 3;
 STORE B INTO 'hdfs://localhost:9000/output';
 
 -- Ly, Cy
-
 A = load 'hdfs://localhost:9000/input' USING PigStorage(',') AS (name: chararray, age:int, test: chararray);
 rmf /output;
 STORE A INTO 'hdfs://localhost:9000/output'; 
@@ -27,7 +26,6 @@ STORE B INTO 'hdfs://localhost:9000/output';
 
 
 -- Some bug in tuple loading ?
-
 A = LOAD 'hdfs://localhost:9000/input' AS (t1:tuple(t1a:int, t1b:int,t1c:int), t2:tuple(t2a:int,t2b:int,t2c:int));
 B = FOREACH A GENERATE t1.t1a,t2.$0;
 STORE B INTO 'hdfs://localhost:9000/output'; 
@@ -39,7 +37,6 @@ B = FOREACH A GENERATE $1+5;
 STORE B INTO 'hdfs://localhost:9000/output'; 
 
 --  Ly, Cn
-
 A = load 'hdfs://localhost:9000/input' USING PigStorage(',') AS (name: chararray, age:int);
 B = GROUP A BY name;
 C = FOREACH B GENERATE COUNT(A);
